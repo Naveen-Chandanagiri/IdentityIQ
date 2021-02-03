@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule  language="beanshell"  name="Dummy WebServices  Before-Create Rule" type="WebServiceBeforeOperationRule">
+  <Description>This rule is used by the  Web Services connector before performing any operation like testconnection, aggregation etc. Here user can update the existing Endpoint object using a key 'updatedEndPoint' and along with it save 
+required attribute in the application using key 'connectorStateMap'. If user just want to return Endpoint (requestEndPoint) no need to create map and update the key values. But if a user wants to return both Endpoint (requestEndPoint) and connectorStateMap who's values will be eventually saved in the application. Create a Map and add both using respective key's.</Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>The application whose data file is being processed.</Description>
+      </Argument>
+      <Argument name="requestEndPoint">
+        <Description>The current request information contain header, body, context url, method type, response attribute map, 
+                successful response code
+                </Description>
+      </Argument>
+      <Argument name="oldResponseMap">
+        <Description>earlier response object </Description>
+      </Argument>
+      <Argument name="restClient">
+        <Description>REST Client Object</Description>
+      </Argument>
+      <Argument name="provisioningPlan">
+        <Description>provisioningPlan can be used to update the payload of the http request. Provisioning Plan has an account request which defines the operation to be performed on the account.
+                 An account request can contain multiple attributes requests and each attribute request represents an operation on a single account attribute.
+                </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="Endpoint or Updated Map which contains requestEndPoint and connectorStateMap">
+        <Description>Updated Endpoint or information Map which contains endpoint and connectorStateMap</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source>import sailpoint.object.*;
+import sailpoint.api.*;
+import java.util.*;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+  public String getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+    if ( acctReq != null ) {
+      AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+      if ( attrReq != null ) {
+        return attrReq.getValue();
+      }
+    }
+    return null;
+  }
+  
+		List attrList = new ArrayList();
+		attrList.add("employee_age");
+		attrList.add("employee_salary");
+		attrList.add("employee_id");
+		attrList.add("employee_name");
+		attrList.add("manager");
+    attrList.add("department");
+  
+						 
+	          String userName =  provisioningPlan.getNativeIdentity();
+            System.out.println("UserName:" +userName);
+            Identity identityObj = context.getObjectByName(Identity.class,userName);
+            
+		  if( provisioningPlan != null ) {
+		  
+		  System.out.println("Before ProvisioningPlan:" + provisioningPlan.toXml());
+		  System.out.println("Attribute Before List:" + attrList);
+		  List accRequests = provisioningPlan.getAccountRequests(); 
+		  if ( ( accRequests != null ) &amp;&amp; ( accRequests.size() > 0 ) ) {
+		  for(AccountRequest accRequest : accRequests) {
+		  List attrReqList = accRequest.getAttributeRequests();
+      accRequest.add(new AttributeRequest("testAttr", ProvisioningPlan.Operation.Add,"hi"));
+		  for(AttributeRequest attrReq : attrReqList)
+		  {
+			attrList.remove(attrReq.getName());
+        
+      System.out.println("Attribute getName Method:" +attrReq.getName());
+      }
+			System.out.println("Attribute After List:" +attrList);
+			
+			for(String str : attrList)
+		  {
+        
+			  if(str.equalsIgnoreCase("employee_age"))
+			  {
+				  accRequest.add(new AttributeRequest("employee_age", ProvisioningPlan.Operation.Add,getAttributeRequestValue(accRequest,"employee_age")));
+        }
+          else if(str.equalsIgnoreCase("employee_salary"))
+          {
+            accRequest.add(new AttributeRequest("employee_salary", ProvisioningPlan.Operation.Add,getAttributeRequestValue(accRequest,"employee_salary")));
+          }
+		  else if(str.equalsIgnoreCase("employee_id"))
+		  {
+		  accRequest.add(new AttributeRequest("employee_id", ProvisioningPlan.Operation.Add,getAttributeRequestValue(accRequest,"employee_id")));
+          }
+		  else if(str.equalsIgnoreCase("employee_name"))
+		  {
+		  accRequest.add(new AttributeRequest("employee_name", ProvisioningPlan.Operation.Add,getAttributeRequestValue(accRequest,"employee_name")));
+          }
+		  else if(str.equalsIgnoreCase("manager"))
+		  {
+		  accRequest.add(new AttributeRequest("manager", ProvisioningPlan.Operation.Add,identityObj.getAttribute("manager")));
+          }
+        else if(str.equalsIgnoreCase("department"))
+		  {
+		  accRequest.add(new AttributeRequest("department", ProvisioningPlan.Operation.Add,identityObj.getAttribute("department")));
+          }
+        System.out.println("After ProvisioningPlan:" + provisioningPlan.toXml());
+		}
+		}
+		}
+		}
+  System.out.println("EndPoint:" +requestEndPoint);
+  System.out.println("EndPoint Body:" +requestEndPoint.getBody());
+  Map map = requestEndPoint.getBody();
+  System.out.println("EndPoint map:" +map.get("jsonBody"));
+  Object obj = new JSONParser().parse(map.get("jsonBody"));
+  JSONObject jo = (JSONObject) obj;
+  jo.put("jsonAttr","jsonValue");
+  map.put("jsonBody",jo);
+  requestEndPoint.setBody(map);
+  
+
+  System.out.println("EndPoint Modified:" +requestEndPoint);
+  System.out.println("EndPoint Body Modified:" +requestEndPoint.getBody());
+  return requestEndPoint;
+  
+  </Source>
+</Rule>
