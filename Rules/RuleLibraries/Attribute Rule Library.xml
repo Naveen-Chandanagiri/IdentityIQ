@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule  language="beanshell"  name="Attribute Rule Library">
+  <Source>
+  import sailpoint.object.Identity;
+  import sailpoint.object.Application;
+  import sailpoint.object.Link;
+  import sailpoint.object.Filter;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  
+  import java.util.List;
+  import java.util.Map;
+    
+  public String getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+    if ( acctReq != null ) {
+      AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+      if ( attrReq != null ) {
+        return attrReq.getValue();
+      }
+    }
+    return null;
+  }
+  
+  
+  public String getIdentityAttribute(SailPointContext context, Identity identity, String attribute) {
+    if ( identity != null ) {
+      return identity.getAttribute(attribute);
+	  }
+	  return null;
+	  
+	  }
+  
+  
+  public String getApplicationAttribute(SailPointContext context,Identity identity, String application, String attribute) {
+    if ( application != null ) {
+      Application app = context.getObjectByName(Application.class,application);
+      if(app != null)
+      {
+  Filter f = Filter.eq("application", app);
+  
+	QueryOptions qo = new QueryOptions();
+  qo.addFilter(f);
+	List links = context.getObjects(Link.class, qo);
+  Iterator it = links.iterator();
+   while(it.hasNext())
+  {
+    linkNames = (Link)it.next();
+    return linkNames.getAttribute(attribute);
+  }
+	  }
+	  return null;
+	  
+	  }
+  }
+  </Source>
+</Rule>
