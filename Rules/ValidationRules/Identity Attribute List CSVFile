@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule  language="beanshell"  name="Identity Attribute List CSVFile" type="Validation">
+  <Source>
+  			import sailpoint.object.*;
+        import java.util.*;
+        import sailpoint.api.*;
+
+       
+       File csvFile = new File("C:\\Sailpoint\\identityAttributeTest.csv");
+       BufferedWriter bw = new BufferedWriter(new FileWriter(csvFile));
+       String delimtier = "|";  
+       String newLine = "\n";
+       
+       bw.append(newLine);
+       ArrayList columnNames = new ArrayList();  
+       columnNames.add("First Name");
+       columnNames.add("Last Name");
+       columnNames.add("Display Name");
+       columnNames.add("EmployeeID");
+       columnNames.add("NetworkID");
+	 		  columnNames.add("Email");
+	 		  columnNames.add("Manager");
+	 		 
+	   
+	   
+       
+       boolean commaPrefix = false;  
+       for (String columnName : columnNames) {  
+         if (commaPrefix) bw.append(delimtier);  
+         bw.append(columnName);  
+         commaPrefix = true;      
+       }  
+       bw.append(newLine);
+       
+    
+      List identityList = context.getObjects(Identity.class);
+      List idList = new ArrayList();
+      for(Identity identity  : identityList)
+      { 
+        if(identity != null)
+		{
+        HashMap outputRow = new HashMap();
+        outputRow.put("First Name",identity.getAttribute("firstname"));
+        outputRow.put("Last Name",identity.getAttribute("lastname"));
+        outputRow.put("Display Name",identity.getAttribute("displayName"));
+        outputRow.put("EmployeeID",identity.getAttribute("employeeId"));
+        outputRow.put("NetworkID",identity.getAttribute("networkId"));
+				outputRow.put("Email",identity.getAttribute("email"));
+        outputRow.put("Manager",identity.getAttribute("manager"));
+        
+				
+        commaPrefix = false;  
+        System.out.println("columnNames Selected:"+columnNames);
+            for (String columnName : columnNames) {  
+              if (commaPrefix) bw.append(delimtier);  
+              String valToWrite = outputRow.get(columnName);
+        System.out.println("valToWrite Selected Identities:"+valToWrite);
+              if (null != valToWrite)  {  
+                bw.append(valToWrite);        
+              } else {  
+                bw.append("");  
+              }  
+              commaPrefix = true;      
+            }  
+            bw.append("\n");
+        
+		}
+	}
+      
+        bw.flush();
+        bw.close();
+        
+       
+  </Source>
+</Rule>
