@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule  language="beanshell"  name="Assigning Roles through Rule" type="Validation">
+  <Description>This rule is used for test cases</Description>
+  <Source>
+
+import sailpoint.object.Identity;
+import java.util.List;
+import sailpoint.object.ProvisioningPlan;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+import sailpoint.api.Provisioner;
+
+String identityNames = "Chris Greene,Clarence Harper";  //identity Names with comma separated.
+String role = "Dev-Test-B";    //Business Role Name or IT Role Name.
+
+String[] identities = identityNames.split(",");
+List identityList = Arrays.asList(identities);
+for(String identityName : identityList){
+    
+ProvisioningPlan plan = new ProvisioningPlan();
+ProvisioningPlan.AccountRequest accReq = new ProvisioningPlan.AccountRequest();
+accReq.setApplication("IIQ");
+accReq.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+ProvisioningPlan.AttributeRequest attrReq = new ProvisioningPlan.AttributeRequest("assignedRoles", ProvisioningPlan.Operation.Add, role);
+accReq.add(attrReq);
+plan.add(accReq);
+
+Identity requestee = context.getObjectByName(Identity.class, identityName);
+plan.setIdentity(requestee);
+Provisioner p = new Provisioner(context);
+p.execute(plan);
+}
+  
+  </Source>
+</Rule>

@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="CreateGroupsADRule" type="Validation">
+  <Description>This rule is used for test cases</Description>
+  <Source>
+  
+import sailpoint.object.Identity;
+import java.util.List;
+import sailpoint.object.ProvisioningPlan;
+import sailpoint.object.ProvisioningPlan.ObjectRequest;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+import sailpoint.api.Provisioner;
+
+ProvisioningPlan plan = new ProvisioningPlan();
+String appName = "AD";
+String groupname ="MyEntitlement";
+String displayName ="MyEntitlement";
+String wholeDN = "CN=MyEntitlement,OU=Groups,OU=Demo,DC=eshiam,DC=com";
+ProvisioningPlan.ObjectRequest objRequest = new ProvisioningPlan.ObjectRequest();
+objRequest.setApplication(appName);
+objRequest.setNativeIdentity(groupname);
+objRequest.setOp(ProvisioningPlan.ObjectOperation.Create);
+objRequest.setType("group");
+plan.setTargetIntegration(appName);
+
+objRequest.setNativeIdentity(wholeDN);
+objRequest.add(new AttributeRequest("distinguishedName", ProvisioningPlan.Operation.Add,wholeDN));
+objRequest.add(new AttributeRequest("sAMAccountName", ProvisioningPlan.Operation.Add,groupname));
+objRequest.add(new AttributeRequest("objectClass", ProvisioningPlan.Operation.Add,"group"));
+objRequest.add(new AttributeRequest("description", ProvisioningPlan.Operation.Add,displayName));
+objRequest.add(new AttributeRequest("GroupType", ProvisioningPlan.Operation.Add,"Security"));
+objRequest.add(new AttributeRequest("ObjectType", ProvisioningPlan.Operation.Add,"Group"));
+objRequest.add(new AttributeRequest("GroupScope", ProvisioningPlan.Operation.Add,"Universal"));
+objRequest.add(new AttributeRequest("sysAttribute", ProvisioningPlan.Operation.Add,"memberOf"));
+objRequest.add(new AttributeRequest("displayName", ProvisioningPlan.Operation.Add,displayName));
+objRequest.add(new AttributeRequest("sysManagedAttributeType", ProvisioningPlan.Operation.Add,"group"));
+
+plan.add(objRequest);
+Provisioner p = new Provisioner(context);
+p.execute(plan);
+
+return plan;
+  </Source>
+</Rule>
