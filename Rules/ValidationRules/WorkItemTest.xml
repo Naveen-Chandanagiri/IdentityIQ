@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="WorkItem_Test" type="Validation">
+  <Description>This rule is used for test cases</Description>
+  <Source>
+import sailpoint.object.*;
+import sailpoint.api.*;
+
+String owner = "Amanda Ross";
+Identity identity = context.getObjectByName(Identity.class,owner);
+  
+Identity newOwner = context.getObjectByName(Identity.class,"Alan Bradley");
+
+String type= "Certification";
+//String type = "Remediation";
+Filter f2 = Filter.eq("type",type);
+Filter f1 = Filter.eq("owner",identity);
+  
+Filter f = Filter.and(Filter.eq("type", type),Filter.eq("owner", identity));
+
+
+QueryOptions qo = new QueryOptions();
+qo.addFilter(f);
+
+List workItemList = context.getObjects(WorkItem.class,qo);
+for(WorkItem item : workItemList)
+{
+  item.setOwner(newOwner);
+}
+return workItemList;
+  </Source>
+</Rule>
