@@ -1,0 +1,89 @@
+  <Step icon="Start" name="Start" posX="25" posY="10" resultVariable="plan">
+    <Script>
+      <Source>
+        import java.util.ArrayList;
+        import java.util.List;
+        import java.util.Map;
+        
+		import sailpoint.object.Custom;
+        import sailpoint.object.Identity;
+        import sailpoint.object.Bundle;
+        import sailpoint.object.ProvisioningPlan;
+        import sailpoint.object.ProvisioningTarget;
+        import sailpoint.object.ProvisioningPlan.AccountRequest;
+        import sailpoint.object.ProvisioningPlan.AttributeRequest;
+
+        System.out.println("RoleRemove----BeforePlan::" + plan.toXml());
+        AccountRequest removeRoleAcctReq = new AccountRequest();
+        removeRoleAcctReq.setApplication("IIQ");
+        removeRoleAcctReq.setOp(ProvisioningPlan.ObjectOperation.Modify);
+
+        try{
+
+        if(plan != null){
+        Identity identityObj = context.getObjectByName(Identity.class,identityName);
+        Custom removeRoleObj = context.getObject(Custom.class,"RemovableRoles");
+        Map removeRoleMap =    removeRoleObj.getAttributes().getMap();
+        List&lt;String> removeRoleValues = removeRoleMap.get("removabeRoles");
+        System.out.println("The List of removable Roles Are ::"+removeRoleValues);
+
+
+        List&lt;AccountRequest> acctReqList = plan.getAccountRequests(); 
+        for(AccountRequest acctReq : acctReqList){
+
+        if(acctReq != null &amp;&amp; acctReq.getApplication().equalsIgnoreCase("IIQ") &amp;&amp; AccountRequest.Operation.Modify.equals(acctReq.getOperation())){
+
+        List&lt;AttributeRequest> attrReqList = acctReq.getAttributeRequests();
+        AttributeRequest attrReq = attrReqList.get(0);
+
+        if(attrReq != null &amp;&amp; attrReq.getName().equalsIgnoreCase("assignedRoles") &amp;&amp; "Add".equalsIgnoreCase(attrReq.getOperation().toString())){
+
+        List&lt;Bundle> identityAssignedRoleList = identityObj.getAssignedRoles();
+        List&lt;Bundle> identityRequiredRoleList = identityObj.getBundles();
+        if( identityRequiredRoleList != null){
+        identityAssignedRoleList.addAll(identityRequiredRoleList);
+        }
+
+        if(attrReq.getValue().toString().equalsIgnoreCase(removeRoleValues.get(0)) || attrReq.getValue().toString().equalsIgnoreCase(removeRoleValues.get(1)))
+        {
+        removeRoleValues.remove(attrReq.getValue().toString());
+        }
+		if(removeRoleValues.size() == 1){
+        Bundle removableBundle = context.getObjectByName(Bundle.class,removeRoleValues.get(0));
+        for(Bundle identityAssignedRole : identityAssignedRoleList){
+
+        if(removableBundle != null &amp;&amp; identityAssignedRole != null &amp;&amp; identityAssignedRole.getName().equalsIgnoreCase(removableBundle.getName())){
+        removeRoleAcctReq.add(new AttributeRequest("assignedRoles" , ProvisioningPlan.Operation.Remove , identityAssignedRole.getName()));
+        removableBundle = null;
+        }
+        else if(removableBundle != null){
+
+        List&lt;Bundle> removableRequiredRoleList = removableBundle.getRequirements();
+
+        for(Bundle removableRequiredRole : removableRequiredRoleList){			
+        if(removableRequiredRole != null &amp;&amp; identityAssignedRole != null &amp;&amp; removableRequiredRole.getName().equalsIgnoreCase(identityAssignedRole.getName())){
+        removeRoleAcctReq.add(new AttributeRequest("assignedRoles" , ProvisioningPlan.Operation.Remove , identityAssignedRole.getName()));
+        }
+        }
+        }
+        }
+        }
+        }
+        }
+        }
+        }
+
+        }catch(Exception ex){
+        ex.printStackTrace();
+        }
+        if(removeRoleAcctReq.getAttributeRequests() != null){
+        plan.add(removeRoleAcctReq);
+        return plan;
+        }
+        else{
+        return plan;
+        }
+      </Source>
+    </Script>
+    <Transition to="Initialize"/>
+  </Step>
