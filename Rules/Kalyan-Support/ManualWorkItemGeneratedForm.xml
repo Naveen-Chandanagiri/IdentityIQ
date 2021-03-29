@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="isManualWorkItemGeneratedForm" type="Workflow">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Manager Selection Form"/>
+    </Map>
+  </Attributes>
+  <Description>Approver and Identity Selection Form</Description>
+  <Button action="next" label="submit"/>
+  <Button action="cancel" label="Cancel"/>
+  <Section>
+    <Field displayName="requestee" name="requesteeName" postBack="true" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="approver" multi="true" name="approverName" postBack="true" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Test Attribute" dynamic="true" name="testAttribute" postBack="true" type="string"/>
+  </Section>
+</Form>

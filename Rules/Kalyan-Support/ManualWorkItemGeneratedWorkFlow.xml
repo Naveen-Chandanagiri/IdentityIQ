@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="isManualWorkItemGeneratedWorkFlow-Test" type="IdentityLifecycle">
+  <Variable initializer="true" name="trace"/>
+  <Description>Emergency-Workflow</Description>
+  <Step icon="Start" name="Start" posX="20" posY="20">
+    <Transition to="Select Approver and Identity"/>
+  </Step>
+  <Step icon="Default" name="Select Approver and Identity" posX="174" posY="16">
+    <Approval name="Approver and Identity Selection Form" owner="spadmin" return="requesteeName,approverName,path" send="requesteeName,approverName,path">
+      <Form name="ApproverManager Form">
+        <FormRef name="isManualWorkItemGeneratedForm"/>
+      </Form>
+    </Approval>
+    <Transition to="Review"/>
+  </Step>
+  <Step icon="Default" name="Review">
+    <Arg name="identityName" value="ref:requesteeName"/>
+    <Script>
+      <Source>
+        System.out.println("The IdentityName is ::"+requesteeName);
+        System.out.println("The ApproverName is ::"+approverName);
+        System.out.println("Test Path is:: "+path);
+      </Source>
+    </Script>
+    <Transition to="Process Leaver"/>
+  </Step>
+  <Step icon="Message" name="Process Leaver" posX="385" posY="24" resultVariable="adPlan">
+    <Script>
+      <Source>
+        import sailpoint.object.*;
+        import sailpoint.api.*;
+
+        Identity identityObj = context.getObjectByName(Identity.class,requesteeName);
+        ProvisioningPlan plan = new ProvisioningPlan();
+        plan.setIdentity(identityObj);
+        
+
+        AccountRequest acctReq = new AccountRequest();
+        acctReq.setApplication("DemoCsv");
+        acctReq.setOp(ProvisioningPlan.ObjectOperation.Create);
+				acctReq.add(new AttributeRequest("path" , ProvisioningPlan.Operation.Add , path));
+		
+        plan.add(acctReq);
+        return plan;
+      </Source>
+    </Script>
+    <Transition to="ProvisionUser"/>
+  </Step>
+  <Step icon="Task" name="ProvisionUser" posX="459" posY="26">
+    <Arg name="identityName" value="ref:requesteeName"/>
+    <Arg name="foregroundProvisioning" value="false"/>
+    <Arg name="path" value="ref:path"/>
+    <Arg name="approverName" value="ref:approverName"/>
+    <Arg name="approvalScheme" value="ref:approvalScheme"/>
+    <Arg name="plan" value="ref:adPlan"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="approvingIdentities" value="ref:approverName"/>
+    <Arg name="approvalScheme" value="ref:approvalScheme"/>
+    <Arg name="approvalMode" value="ref:approvalMode"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Eshiam - LCM Provisioning"/>
+    </WorkflowRef>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="Stop" posX="754" posY="23"/>
+</Workflow>
